@@ -28,6 +28,7 @@
             background-color: #252525;
             padding: 1rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
 
         .nav-links {
@@ -66,18 +67,159 @@
 
         .content {
             max-width: 800px;
-            margin: 4rem auto;
-            padding: 0 2rem;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 60vh;
+            margin: 2rem auto;
+            padding: 2rem;
         }
 
-        h1 {
-            font-size: 3.5rem;
+        .game-container {
+            background-color: #252525;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-button {
+            background-color: #4a9eff;
+            color: white;
+        }
+
+        .start-button:hover {
+            background-color: #3a7fd9;
+        }
+
+        .stop-button {
+            background-color: #ff4a4a;
+            color: white;
+        }
+
+        .stop-button:hover {
+            background-color: #d93a3a;
+        }
+
+        .change-letter-button {
+            background-color: #9e4aff;
+            color: white;
+        }
+
+        .change-letter-button:hover {
+            background-color: #7d3ad9;
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: 600;
             color: #4a9eff;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .game-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #4a4a4a;
+            border-radius: 6px;
+            background-color: #1a1a1a;
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .game-input:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .correct-answers {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .submissions-container {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+        }
+
+        .submissions-container h3 {
+            color: #4a9eff;
+            margin-bottom: 0.5rem;
+        }
+
+        .submissions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .submission {
+            padding: 0.25rem 0.75rem;
+            background-color: #252525;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .submission.correct {
+            border-left: 3px solid #4a9eff;
+        }
+
+        .submission.incorrect {
+            border-left: 3px solid #ff4a4a;
+        }
+
+        .correct-answer {
+            background-color: #1a1a1a;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .results {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .results h3 {
+            color: #4a9eff;
+            margin-bottom: 1rem;
+        }
+
+        .missed-countries {
+            columns: 2;
+            margin-top: 1rem;
         }
 
         @keyframes fadeIn {
@@ -101,7 +243,267 @@
         </ul>
     </nav>
     <div class="content">
-        <h1>Games</h1>
+        <div class="game-container">
+            <div class="game-header">
+                <h1>Geography Typing Game</h1>
+                <p>Type as many countries that start with "<span id="targetLetter">A</span>" as you can in 45 seconds!</p>
+            </div>
+            <div class="timer">45</div>
+            <div class="game-controls">
+                <button class="button start-button" id="startButton">Start Game</button>
+                <button class="button stop-button" id="stopButton" disabled>Stop Game</button>
+                <button class="button change-letter-button" id="changeLetterButton">Change Letter</button>
+            </div>
+            <input type="text" class="game-input" id="countryInput" placeholder="Type a country name..." disabled>
+            <div class="submissions-container">
+                <h3>Your Submissions:</h3>
+                <div class="submissions-list" id="submissionsList"></div>
+            </div>
+            <div class="correct-answers" id="correctAnswers"></div>
+            <div class="results" id="results">
+                <h3>Game Results</h3>
+                <p>Correct Answers: <span id="totalCorrect">0</span></p>
+                <p>Missed Countries: <span id="totalMissed">0</span></p>
+                <h4>Countries you missed:</h4>
+                <div class="missed-countries" id="missedCountries"></div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        const countriesByLetter = {
+            'A': [
+                "Afghanistan", "Albania", "Algeria", "Andorra", "Angola",
+                "Antigua and Barbuda", "Argentina", "Armenia", "Australia",
+                "Austria", "Azerbaijan"
+            ],
+            'B': [
+                "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus",
+                "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+                "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei",
+                "Bulgaria", "Burkina Faso", "Burundi",
+            ],
+            'C': [
+                "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic",
+                "Chad", "Chile", "China", "Colombia", "Comoros",
+                "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic"
+            ],
+            'D': [
+                "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic"
+            ],
+            'E': [
+                "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea",
+                "Eritrea", "Estonia", "Eswatini", "Ethiopia"
+            ],
+            'F': [
+                "Fiji", "Finland", "France"
+            ],
+            'G': [
+                "Gabon", "Gambia", "Georgia", "Germany", "Ghana",
+                "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana"
+            ],
+            'H': [
+                "Haiti", "Honduras", "Hungary"
+            ],
+            'I': [
+                "Iceland", "India", "Indonesia", "Iran", "Iraq",
+                "Ireland", "Israel", "Italy"
+            ],
+            'J': [
+                "Jamaica", "Japan", "Jordan"
+            ],
+            'K': [
+                "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan"
+            ],
+            'L': [
+                "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia",
+                "Libya", "Liechtenstein", "Lithuania", "Luxembourg"
+            ],
+            'M': [
+                "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali",
+                "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico",
+                "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro",
+                "Morocco", "Mozambique", "Myanmar"
+            ],
+            'N': [
+                "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand",
+                "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia",
+                "Norway"
+            ],
+            'O': [
+                "Oman"
+            ],
+            'P': [
+                "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea",
+                "Paraguay", "Peru", "Philippines", "Poland", "Portugal"
+            ],
+            'Q': [
+                "Qatar"
+            ],
+            'R': [
+                "Romania", "Russia", "Rwanda"
+            ],
+            'S': [
+                "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
+                "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia",
+                "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
+                "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa",
+                "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan",
+                "Suriname", "Sweden", "Switzerland", "Syria"
+            ],
+            'T': [
+                "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo",
+                "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu"
+            ],
+            'U': [
+                "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States",
+                "Uruguay", "Uzbekistan"
+            ],
+            'V': [
+                "Vanuatu", "Vatican City", "Venezuela", "Vietnam"
+            ],
+            'W': [
+                // No countries officially start with W
+            ],
+            'X': [
+                // No countries officially start with X
+            ],
+            'Y': [
+                "Yemen"
+            ],
+            'Z': [
+                "Zambia", "Zimbabwe"
+            ]
+        };
+
+        // Game state
+        let gameActive = false;
+        let timeRemaining = 45;
+        let correctGuesses = new Set();
+        let timerInterval;
+        let submissions = [];
+        let currentLetter = 'A';
+
+        // DOM elements
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const changeLetterButton = document.getElementById('changeLetterButton');
+        const countryInput = document.getElementById('countryInput');
+        const timerDisplay = document.querySelector('.timer');
+        const correctAnswersDisplay = document.getElementById('correctAnswers');
+        const resultsDisplay = document.getElementById('results');
+        const totalCorrectDisplay = document.getElementById('totalCorrect');
+        const totalMissedDisplay = document.getElementById('totalMissed');
+        const missedCountriesDisplay = document.getElementById('missedCountries');
+        const submissionsList = document.getElementById('submissionsList');
+        const targetLetterDisplay = document.getElementById('targetLetter');
+
+        function changeLetter() {
+            currentLetter = Math.random() < 0.5 ? 'A' : 'B';
+            targetLetterDisplay.textContent = currentLetter;
+        }
+
+        // Game functions
+        function startGame() {
+            gameActive = true;
+            timeRemaining = 45;
+            correctGuesses.clear();
+            submissions = [];
+            
+            correctAnswersDisplay.innerHTML = '';
+            submissionsList.innerHTML = '';
+            resultsDisplay.style.display = 'none';
+            
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            changeLetterButton.disabled = true;
+            countryInput.disabled = false;
+            countryInput.value = '';
+            countryInput.focus();
+
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            changeLetterButton.disabled = false;
+            countryInput.disabled = true;
+
+            showResults();
+        }
+
+        function updateTimer() {
+            timeRemaining--;
+            timerDisplay.textContent = timeRemaining;
+
+            if (timeRemaining <= 0) {
+                stopGame();
+            }
+        }
+
+        function checkAnswer(guess) {
+            const normalizedGuess = guess.trim().toLowerCase();
+            const correctAnswer = countriesByLetter[currentLetter].find(
+                country => country.toLowerCase() === normalizedGuess
+            );
+
+            // Add to submissions list regardless of correctness
+            addSubmission(guess, !!correctAnswer);
+
+            if (correctAnswer && !correctGuesses.has(correctAnswer)) {
+                correctGuesses.add(correctAnswer);
+                displayCorrectAnswer(correctAnswer);
+                return true;
+            }
+            return false;
+        }
+
+        function addSubmission(guess, isCorrect) {
+            const submissionElement = document.createElement('div');
+            submissionElement.className = `submission ${isCorrect ? 'correct' : 'incorrect'}`;
+            submissionElement.textContent = guess;
+            submissionsList.appendChild(submissionElement);
+            submissions.push({ guess, isCorrect });
+        }
+
+        function displayCorrectAnswer(country) {
+            const answerElement = document.createElement('div');
+            answerElement.className = 'correct-answer';
+            answerElement.textContent = country;
+            correctAnswersDisplay.appendChild(answerElement);
+        }
+
+        function showResults() {
+            const missedCountries = countriesByLetter[currentLetter].filter(
+                country => !correctGuesses.has(country)
+            );
+
+            totalCorrectDisplay.textContent = correctGuesses.size;
+            totalMissedDisplay.textContent = missedCountries.length;
+            
+            missedCountriesDisplay.innerHTML = missedCountries
+                .map(country => `<div>${country}</div>`)
+                .join('');
+
+            resultsDisplay.style.display = 'block';
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', startGame);
+        stopButton.addEventListener('click', stopGame);
+        changeLetterButton.addEventListener('click', changeLetter);
+
+        countryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && gameActive && countryInput.value.trim()) {
+                const guess = countryInput.value;
+                checkAnswer(guess);
+                countryInput.value = '';
+            }
+        });
+    </script>
 </body>
 </html>
