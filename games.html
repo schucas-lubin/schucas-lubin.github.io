@@ -399,7 +399,9 @@
         const targetLetterDisplay = document.getElementById('targetLetter');
 
         function changeLetter() {
-            currentLetter = Math.random() < 0.5 ? 'A' : 'B';
+            const availableLetters = Object.keys(countriesByLetter).filter(letter => letter !== 'W' && letter !== 'X');
+            const randomIndex = Math.floor(Math.random() * availableLetters.length);
+            currentLetter = availableLetters[randomIndex];
             targetLetterDisplay.textContent = currentLetter;
         }
 
